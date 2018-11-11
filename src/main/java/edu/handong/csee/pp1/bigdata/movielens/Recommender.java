@@ -9,17 +9,18 @@ public class Recommender
 	TreeMap<Integer, Integer> countForAllItemsetsWithSize1 = new TreeMap<Integer, Integer>() ; // first item, second count
 	TreeMap<FrequentItemsetSize2, Integer> countForAllItemsetsWithSize2 = new TreeMap<FrequentItemsetSize2, Integer>() ; // first item, second count
 	
-	// Frequent itemsets with size 1. Key is movie id and value is the number baskets (frequency) for the movie
-	// all itemsets in this map stisfies the minimum support.
-	TreeMap<Integer, Integer> freqItemsetsWithSize1 = new TreeMap<Integer, Integer>() ; 
+	// Frequent item sets with size 1. Key is movie id and value is the number baskets (frequency) for the movie
+	// all item sets in this map satisfies the minimum support.
+	TreeMap<Integer, Integer> 
+	freqItemsetsWithSize1 = new TreeMap<Integer, Integer>() ; 
 	
-	// Frequent itemsets with size 2. Key is two movie ids (set) and value is the number baskets (frequency) for the movie
-	// all itemsets in this map stisfies the minimum support.
+	// Frequent item sets with size 2. Key is two movie ids (set) and value is the number baskets (frequency) for the movie
+	// all item sets in this map satisfies the minimum support.
 	TreeMap<FrequentItemsetSize2, Integer> 
 	freqItemsetsWithSize2 = new TreeMap<FrequentItemsetSize2, Integer>() ; 
 	
-	// Frequent itemsets with size 3. Key is three movie ids (set) and value is the number baskets (frequency) for the movie
-	// all itemsets in this map stisfies the minimum support.
+	// Frequent item sets with size 3. Key is three movie ids (set) and value is the number baskets (frequency) for the movie
+	// all item sets in this map satisfies the minimum support.
 	TreeMap<FrequentItemsetSize3, Integer> 
 	freqItemsetsWithSize3 = new TreeMap<FrequentItemsetSize3, Integer>() ; 
 
@@ -152,8 +153,39 @@ public class Recommender
 
 	private int predictPair(HashSet<Integer> anItemset, Integer j) {
 		/* TODO: implement this method */
+		if (anItemset.size() < 1)
+			return 0 ;
+
+		// Compute support, confidence, or lift. Based on their threshold, decide how to predict. Return 1 when metrics are satisfied by thresholds, otherwise 0.
+		// In the current implementation, we considered only confidence.
+		int evidence = 0 ;
+		for (Integer p : anItemset) {
+			
+			// the number baskets for I
+			Integer numBasketsForI = freqItemsetsWithSize1.get(new FrequentItemsetSize1(p)) ;
+			
+			if (numBasketsForI == null)
+				continue ;
+			
+			// the number of baskets for I U {j}
+			TreeSet<Integer> assocRule = new TreeSet() ;
+			assocRule.add(p) ;
+			assocRule.add(j) ; 
+			FrequentItemsetSize2 item = new FrequentItemsetSize2(assocRule) ;	
+			Integer numBasketsForIUnionj = freqItemsetsWithSize2.get(item) ; // All itemsets in freqItemsetsWithSize3 satisfy minimum support when the are computed.
+			if (numBasketsForIUnionj == null)
+				continue ;
+			
+			// compute confidence: The confidence of the rule I -> j is the ratio of the number of baskets for I U {j} and the number of baskets for I.
+			double confidence = (double) numBasketsForIUnionj / numBasketsForI;
 		
-		// Compute support, confidence, or lift. Based on their threshold, decide how to predict. Return 1 when metrics are satisfied by threshold, otherwise 0.
+			if (confidence >= confidence_threshold_rulesize_3) 
+				evidence++ ;
+		}
+
+		if (evidence >= min_evidence_3) 
+			return 1 ;
+
 		return 0 ;
 	}
 
